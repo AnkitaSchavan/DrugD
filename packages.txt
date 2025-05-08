@@ -3,4 +3,3 @@ libglib2.0-0
 libgl1-mesa-glx
 xvfb
 patchelf
-streamlit-aggrid==0.3.4
