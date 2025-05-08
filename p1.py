@@ -1707,7 +1707,7 @@ elif app_mode == "🖥️ Virtual Screening":
         st.markdown("---")
         st.write("### 🚨 Structural Alert Screening")
 
-try-except:
+try-finally:
     # First verify all required variables exist
     if not all(var in globals() for var in ['screen_smiles_valid', 'pains_flags', 'brenk_flags', 'nih_flags', 'all_filter_matches']):
         raise NameError("Missing required screening data variables")
