@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg')  # Disable GUI backend (no libXrender needed)
 import streamlit as st
 import pandas as pd
 import numpy as np
