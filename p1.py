@@ -1704,68 +1704,51 @@ elif app_mode == "🖥️ Virtual Screening":
             status_mol_process.update(label=f"✅ Successfully processed {len(screen_mols)} molecules. {len(invalid_indices)} invalid/skipped.", state="complete")
 
         # Display structural alert information
-st.markdown("---")
-st.write("### 🚨 Structural Alert Screening")
-
-try:
-    # First check if we have all required data
-    required_vars = ['screen_smiles_valid', 'pains_flags', 'brenk_flags', 'nih_flags', 'all_filter_matches']
-    missing_vars = [var for var in required_vars if var not in globals()]
-    if missing_vars:
-        raise NameError(f"Missing required variables: {', '.join(missing_vars)}")
-
-    # Validate array lengths
-    base_length = len(screen_smiles_valid)
-    if not all(len(globals()[var]) == base_length for var in required_vars[1:]):
-        raise ValueError(f"All arrays must have same length as screen_smiles_valid ({base_length})")
-
-    # Create DataFrame
-    alert_data = {
-        'SMILES': screen_smiles_valid,
-        'PAINS Alert': pains_flags,
-        'Brenk Alert': brenk_flags,
-        'NIH Alert': nih_flags,
-        'All Filter Matches': all_filter_matches
-    }
-
-    # Add names if available
-    if 'name' in screen_df.columns and len(screen_df) == base_length:
-        alert_data['Name'] = screen_df['name'].values
-
-    alert_df = pd.DataFrame(alert_data)
-
-    # Display results
-    st.dataframe(
-        alert_df,
-        use_container_width=True,
-        column_config={
-            "PAINS Alert": st.column_config.CheckboxColumn("PAINS Alert"),
-            "Brenk Alert": st.column_config.CheckboxColumn("Brenk Alert"), 
-            "NIH Alert": st.column_config.CheckboxColumn("NIH Alert"),
-            "All Filter Matches": "Matched Filters"
-        }
-    )
-
-    # Show summary metrics
-    cols = st.columns(3)
-    cols[0].metric("PAINS Alerts", f"{sum(pains_flags)}/{len(pains_flags)}")
-    cols[1].metric("Brenk Alerts", f"{sum(brenk_flags)}/{len(brenk_flags)}")
-    cols[2].metric("NIH Alerts", f"{sum(nih_flags)}/{len(nih_flags)}")
-
-    # Download button
-    st.download_button(
-        "💾 Download Results",
-        alert_df.to_csv(index=False).encode('utf-8'),
-        "structural_alerts.csv",
-        "text/csv"
-    )
-
-except NameError as e:
-    st.error(f"Configuration error: {str(e)}")
-except ValueError as e:
-    st.error(f"Data error: {str(e)}")
-except Exception as e:
-    st.error(f"Unexpected error: {str(e)}")
+        st.markdown("---")
+        st.write("### 🚨 Structural Alert Screening")
+       
+        # Create a DataFrame for the alerts
+        alert_df = pd.DataFrame({
+            'SMILES': screen_smiles_valid,
+            'PAINS Alert': pains_flags,
+            'Brenk Alert': brenk_flags,
+            'NIH Alert': nih_flags,
+            'All Filter Matches': all_filter_matches
+        })
+       
+        # Add names if available
+        if 'name' in screen_df.columns:
+            alert_df['Name'] = screen_df.iloc[original_indices]['name'].values
+       
+        st.dataframe(
+            alert_df,
+            use_container_width=True,
+            column_config={
+                "PAINS Alert": st.column_config.CheckboxColumn("PAINS Alert", help="Indicates if molecule matches PAINS filters"),
+                "Brenk Alert": st.column_config.CheckboxColumn("Brenk Alert", help="Indicates if molecule matches Brenk filters"),
+                "NIH Alert": st.column_config.CheckboxColumn("NIH Alert", help="Indicates if molecule matches NIH filters"),
+                "All Filter Matches": "Matched Filters"
+            }
+        )
+       
+        # Summary statistics
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("PAINS Alerts", f"{sum(pains_flags)} / {len(pains_flags)}")
+        with col2:
+            st.metric("Brenk Alerts", f"{sum(brenk_flags)} / {len(brenk_flags)}")
+        with col3:
+            st.metric("NIH Alerts", f"{sum(nih_flags)} / {len(nih_flags)}")
+           
+        # Download alert results
+        csv_alerts = alert_df.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            "💾 Download Alert Results (CSV)",
+            csv_alerts,
+            "structural_alerts_results.csv",
+            "text/csv",
+            key="download_alert_results"
+        )
         
         st.markdown("---") # Use custom HR
         # Screening parameters
