@@ -28,7 +28,7 @@ from rdkit.Chem.FilterCatalog import FilterCatalog, FilterCatalogParams
 # Page configuration with enhanced theme
 st.set_page_config(
     layout="wide",
-    page_title="Drug Discovery Suite",
+    page_title="Drug Candidate Exploration Hub",
     page_icon="🧪",
     initial_sidebar_state="expanded"
 )
