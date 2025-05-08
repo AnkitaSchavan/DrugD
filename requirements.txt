@@ -1,8 +1,9 @@
-streamlit==1.32.2  # Pin to exact version
+pip>=25.1.1  # Force pip upgrade
+streamlit==1.32.2
 pandas==2.2.2
-numpy==1.26.4  # Bump to match pandas compatibility
-rdkit-pypi==2023.9.4  # Use the PyPI wheel
-mordred==1.2.0 --no-binary mordred  # Force source install
+numpy==1.26.4  # Updated for compatibility
+rdkit-pypi==2023.9.4  # Use PyPI wheel instead of conda-forge
+mordred==1.2.0 --no-binary mordred  # Build from source
 pubchempy==1.0.4
 py3Dmol==2.0.1
 matplotlib==3.8.4
