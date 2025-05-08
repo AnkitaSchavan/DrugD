@@ -2,7 +2,10 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from rdkit import Chem
-from rdkit.Chem import Descriptors, Draw, AllChem, DataStructs, Lipinski, Crippen
+from rdkit.Chem import Descriptors, AllChem, DataStructs, Lipinski, Crippen
+from rdkit import Chem
+from rdkit.Chem import Draw
+from rdkit.Chem.Draw import rdMolDraw2D
 from rdkit.Chem import PandasTools, rdFingerprintGenerator
 from rdkit.ML.Descriptors import MoleculeDescriptors
 import pubchempy as pcp
