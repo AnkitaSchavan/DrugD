@@ -1703,22 +1703,151 @@ elif app_mode == "🖥️ Virtual Screening":
 
             status_mol_process.update(label=f"✅ Successfully processed {len(screen_mols)} molecules. {len(invalid_indices)} invalid/skipped.", state="complete")
 
+elif app_mode == "🖥️ Virtual Screening":
+    st.markdown("""
+    <div class="header">
+        <h1 style="color:black; margin:0;">🖥️ Virtual Screening</h1>
+        <p style="color:black; margin:0; opacity:0.8;">Screen a list of compounds from an uploaded file against the built-in drug database to find similar molecules</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("---") # Use custom HR
+
+    st.write("""
+    ### 📄 Upload Compounds for Screening
+    Upload a CSV or TXT file containing a list of compounds. The file should have a column named 'SMILES'
+    if it's a CSV, or just one SMILES per line if it's a TXT file.
+    """)
+
+    # Sample file download
+    sample_smiles = "smiles,name\nCCO,Ethanol\nCCN,Ethylamine\nC1=CC=CC=C1,Benzene\nINVALID_SMILES,BadOne\nCC(=O)OC1=CC=CC=C1C(=O)O,Aspirin" # Add an invalid one for demo
+    st.download_button(
+        "📥 Download Sample SMILES File (CSV)",
+        data=sample_smiles,
+        file_name="sample_screening_smiles.csv",
+        mime="text/csv",
+        key="download_sample_screening"
+    )
+
+    uploaded_file = st.file_uploader("Choose a file (CSV or TXT)", type=['csv', 'txt'], key="screening_uploader")
+
+    if not uploaded_file:
+        st.info("Please upload a file to begin.")
+        st.stop()
+
+    try:
+        # Process uploaded file
+        if uploaded_file.name.endswith('.csv'):
+            screen_df = pd.read_csv(uploaded_file)
+            if 'smiles' not in screen_df.columns:
+                st.error("❌ CSV file must contain a column named 'smiles'.")
+                st.stop()
+            smiles_col = 'smiles'
+        else:  # txt
+            screen_df = pd.DataFrame({
+                'smiles': [line.decode('utf-8').strip() for line in uploaded_file]
+            })
+            smiles_col = 'smiles' # The only column name
+
+        st.success(f"✅ Successfully loaded '{uploaded_file.name}'. Found {len(screen_df)} rows.")
+        st.dataframe(screen_df.head(), use_container_width=True) # Show a preview
+
+        # Convert SMILES to molecules with robust error handling
+        @st.cache_data(show_spinner=False) # Don't show spinner here, use custom status
+        def process_screening_molecules(_df, smiles_col):
+            processed_mols = []
+            processed_smiles = []
+            original_indices = []
+            invalid_indices = []
+            pains_flags = []
+            brenk_flags = []
+            nih_flags = []
+            all_filter_matches = []
+
+            # Initialize filter catalogs
+            params_pains = FilterCatalogParams()
+            params_pains.AddCatalog(FilterCatalogParams.FilterCatalogs.PAINS_A)
+            catalog_pains = FilterCatalog(params_pains)
+            
+            params_brenk = FilterCatalogParams()
+            params_brenk.AddCatalog(FilterCatalogParams.FilterCatalogs.BRENK)
+            catalog_brenk = FilterCatalog(params_brenk)
+            
+            params_nih = FilterCatalogParams()
+            params_nih.AddCatalog(FilterCatalogParams.FilterCatalogs.NIH)
+            catalog_nih = FilterCatalog(params_nih)
+            
+            params_all = FilterCatalogParams()
+            params_all.AddCatalog(FilterCatalogParams.FilterCatalogs.ALL)
+            catalog_all = FilterCatalog(params_all)
+
+            for i, smi in enumerate(_df[smiles_col]):
+                try:
+                    mol = Chem.MolFromSmiles(str(smi)) if pd.notna(smi) else None
+                    if mol:
+                        Chem.SanitizeMol(mol) # Attempt sanitization
+                        processed_mols.append(mol)
+                        processed_smiles.append(str(smi))
+                        original_indices.append(i)
+                        
+                        # Check for structural alerts
+                        pains_flag = catalog_pains.HasMatch(mol)
+                        brenk_flag = catalog_brenk.HasMatch(mol)
+                        nih_flag = catalog_nih.HasMatch(mol)
+                        
+                        pains_flags.append(pains_flag)
+                        brenk_flags.append(brenk_flag)
+                        nih_flags.append(nih_flag)
+                        
+                        # Get all filter matches details
+                        all_matches = catalog_all.GetMatches(mol)
+                        if all_matches:
+                            filter_details = "; ".join([
+                                f"{entry.GetProp('FilterSet')}: {entry.GetDescription()}"
+                                for entry in all_matches
+                            ])
+                            all_filter_matches.append(filter_details)
+                        else:
+                            all_filter_matches.append("None")
+                    else:
+                        invalid_indices.append(i)
+                except Exception as e:
+                    invalid_indices.append(i)
+                    continue
+            
+            return (processed_mols, processed_smiles, original_indices, invalid_indices,
+                   pains_flags, brenk_flags, nih_flags, all_filter_matches)
+
+        with st.status("Processing molecules from file...", expanded=True) as status_mol_process:
+            (screen_mols, screen_smiles_valid, original_indices, invalid_indices,
+             pains_flags, brenk_flags, nih_flags, all_filter_matches) = process_screening_molecules(screen_df, smiles_col)
+
+            if not screen_mols:
+                status_mol_process.update(label="❌ No valid molecules found in the uploaded file.", state="error")
+                st.error("No valid molecules could be processed from the uploaded file. Please check the SMILES strings.")
+                st.stop()
+
+            status_mol_process.update(label=f"✅ Successfully processed {len(screen_mols)} molecules. {len(invalid_indices)} invalid/skipped.", state="complete")
+
         # Display structural alert information
         st.markdown("---")
         st.write("### 🚨 Structural Alert Screening")
        
-        # Create a DataFrame for the alerts
-        alert_df = pd.DataFrame({
-            'SMILES': screen_smiles_valid,
-            'PAINS Alert': pains_flags,
-            'Brenk Alert': brenk_flags,
-            'NIH Alert': nih_flags,
-            'All Filter Matches': all_filter_matches
-        })
+        # Create a DataFrame for the alerts with length validation
+        min_length = min(len(screen_smiles_valid), len(pains_flags), len(brenk_flags), len(nih_flags), len(all_filter_matches))
+        alert_data = {
+            'SMILES': screen_smiles_valid[:min_length],
+            'PAINS Alert': pains_flags[:min_length],
+            'Brenk Alert': brenk_flags[:min_length],
+            'NIH Alert': nih_flags[:min_length],
+            'All Filter Matches': all_filter_matches[:min_length]
+        }
        
         # Add names if available
         if 'name' in screen_df.columns:
-            alert_df['Name'] = screen_df.iloc[original_indices]['name'].values
+            alert_data['Name'] = screen_df.iloc[original_indices]['name'].values[:min_length]
+       
+        alert_df = pd.DataFrame(alert_data)
        
         st.dataframe(
             alert_df,
@@ -1734,11 +1863,11 @@ elif app_mode == "🖥️ Virtual Screening":
         # Summary statistics
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("PAINS Alerts", f"{sum(pains_flags)} / {len(pains_flags)}")
+            st.metric("PAINS Alerts", f"{sum(pains_flags[:min_length])} / {min_length}")
         with col2:
-            st.metric("Brenk Alerts", f"{sum(brenk_flags)} / {len(brenk_flags)}")
+            st.metric("Brenk Alerts", f"{sum(brenk_flags[:min_length])} / {min_length}")
         with col3:
-            st.metric("NIH Alerts", f"{sum(nih_flags)} / {len(nih_flags)}")
+            st.metric("NIH Alerts", f"{sum(nih_flags[:min_length])} / {min_length}")
            
         # Download alert results
         csv_alerts = alert_df.to_csv(index=False).encode('utf-8')
@@ -1831,9 +1960,9 @@ elif app_mode == "🖥️ Virtual Screening":
                 original_query_smiles = screen_smiles_valid[i] # Get original SMILES from the valid list
                 original_row_index = original_indices[i] # Get original row index
                 query_name = screen_df.iloc[original_row_index].get('name', 'N/A') # Try to get 'name' if it exists
-                query_pains = pains_flags[i]
-                query_brenk = brenk_flags[i]
-                query_nih = nih_flags[i]
+                query_pains = pains_flags[i] if i < len(pains_flags) else False
+                query_brenk = brenk_flags[i] if i < len(brenk_flags) else False
+                query_nih = nih_flags[i] if i < len(nih_flags) else False
 
                 for match in matches.itertuples():
                     results.append({
