@@ -1708,7 +1708,7 @@ elif app_mode == "🖥️ Virtual Screening":
         st.write("### 🚨 Structural Alert Screening")
 
 # First check if we have all required data
-try:
+except:
     # Verify all required variables exist
     required_vars = {
         'screen_smiles_valid': screen_smiles_valid,
