@@ -490,7 +490,7 @@ def get_database_fps(data, fp_type):
 if app_mode == "ℹ️ Home page":
     st.markdown("""
     <div class="header" style="color:black;">
-        <h1 style="color:black; margin:0;">🧪 Drug Discovery Suite</h1>
+        <h1 style="color:black; margin:0;">🧪 Drug Candidate Exploration Hub</h1>
         <p style="color:black; margin:0; opacity:0.8;">Comprehensive cheminformatics platform for modern drug discovery</p>
     </div>
     """, unsafe_allow_html=True)
