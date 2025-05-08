@@ -293,13 +293,6 @@ if 'smiles_input' not in st.session_state:
 
 # Sidebar navigation
 with st.sidebar:
-    st.markdown("""
-    <div class="sidebar-header">
-        <h2>🧪 Drug Candidate Exploration Hub</h2>
-        <p>Navigate through modules</p>
-    </div>
-    """, unsafe_allow_html=True)
-
     app_mode = st.radio(
         "Select Module:",
         options=[
