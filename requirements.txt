@@ -38,7 +38,8 @@ urllib3==2.4.0
 watchdog==6.0.0
 
 # 🧪 RDKit - essential for cheminformatics work
-rdkit==2023.9.5
+rdkit-pypi==2022.9.5  # Safer for headless environments
+
 
 libxrender1 
 libxext6 
