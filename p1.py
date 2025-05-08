@@ -1191,85 +1191,85 @@ elif app_mode == "📊 Advanced Similarity Search":
     st.markdown('<hr style="height:2px;border-width:0;color:gray;background:linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet)">',
                 unsafe_allow_html=True)
 
-    # Fingerprint setting
-st.markdown("### 🧪 Fingerprint Settings")
-fp_type = st.radio(
-    "Select fingerprint type:",
-    ["Morgan", "MACCS"],
-    horizontal=True,
-    help="Morgan: Circular fingerprints | MACCS: Predefined keys",
-    key='sim_fp_type'
-)
+    # Fingerprint setting (now only visible in this tab)
+    st.markdown("### 🧪 Fingerprint Settings")
+    fp_type = st.radio(
+        "Select fingerprint type:",
+        ["Morgan", "MACCS"],
+        horizontal=True,
+        help="Morgan: Circular fingerprints | MACCS: Predefined keys",
+        key='sim_fp_type'
+    )
 
-# Upload file for batch search
-st.markdown("### 📁 Upload Compounds & Find Similarities in Database")
-uploaded_file = st.file_uploader("Upload compound file", type=["csv", "txt"], key='sim_upload')
+    # Upload file for batch search
+    st.markdown("### 📁 Upload Compounds & Find Similarities in Database")
+    uploaded_file = st.file_uploader("Upload compound file", type=["csv", "txt"], key='sim_upload')
 
-if uploaded_file is not None:
-    try:
-        if uploaded_file.name.endswith('.csv'):
-            compounds_df = pd.read_csv(uploaded_file)
-        else:
-            compounds_df = pd.read_csv(uploaded_file, header=None, names=['SMILES'])
-        smiles_list = []
-        for _, row in compounds_df.iterrows():
-            smi = row['SMILES'] if 'SMILES' in row else row[0]
-            smiles_list.append(smi)
-
-        # Convert SMILES to molecules
-        molecules = []
-        valid_smiles = []
-        for smi in smiles_list:
-            mol = Chem.MolFromSmiles(smi)
-            if mol:
-                molecules.append(mol)
-                valid_smiles.append(smi)
+    if uploaded_file is not None:
+        try:
+            if uploaded_file.name.endswith('.csv'):
+                compounds_df = pd.read_csv(uploaded_file)
             else:
-                st.warning(f"Invalid SMILES skipped: {smi}")
+                compounds_df = pd.read_csv(uploaded_file, header=None, names=['SMILES'])
+            smiles_list = []
+            for _, row in compounds_df.iterrows():
+                smi = row['SMILES'] if 'SMILES' in row else row[0]
+                smiles_list.append(smi)
 
-        if not molecules:
-            st.warning("No valid molecules found.")
-        else:
-            fps, mols, names = get_database_fps(data, fp_type)
-            top_n = 5
-            results_list = []
+            # Convert SMILES to molecules
+            molecules = []
+            valid_smiles = []
+            for smi in smiles_list:
+                mol = Chem.MolFromSmiles(smi)
+                if mol:
+                    molecules.append(mol)
+                    valid_smiles.append(smi)
+                else:
+                    st.warning(f"Invalid SMILES skipped: {smi}")
 
-            for idx, mol in enumerate(molecules):
-                query_fp = (
-                    AllChem.GetMorganFingerprintAsBitVect(mol, 2, 1024) if fp_type == "Morgan"
-                    else MACCSkeys.GenMACCSKeys(mol)
-                )
-                similarities = []
-                for i, db_fp in enumerate(fps):
-                    if db_fp:
-                        try:
-                            sim = DataStructs.TanimotoSimilarity(query_fp, db_fp)
-                            similarities.append((sim, names[i], mols[i], valid_smiles[idx]))
-                        except:
-                            continue
-                similarities.sort(key=lambda x: x[0], reverse=True)
-                top_hits = similarities[:top_n]
-                results_list.append({'Input SMILES': valid_smiles[idx], 'Top matches': top_hits})
+            if not molecules:
+                st.warning("No valid molecules found.")
+            else:
+                fps, mols, names = get_database_fps(data, fp_type)
+                top_n = 5
+                results_list = []
 
-            # Display results: table + images
-            for res in results_list:
-                st.markdown(f"### Input Molecule: {res['Input SMILES']}")
-                df_matches = pd.DataFrame([{
-                    'Name': hit[1],
-                    'SMILES': hit[3],
-                    'Similarity': f"{hit[0]:.3f}"
-                } for hit in res['Top matches']])
-                st.dataframe(df_matches)
+                for idx, mol in enumerate(molecules):
+                    query_fp = (
+                        AllChem.GetMorganFingerprintAsBitVect(mol, 2, 1024) if fp_type == "Morgan"
+                        else MACCSkeys.GenMACCSKeys(mol)
+                    )
+                    similarities = []
+                    for i, db_fp in enumerate(fps):
+                        if db_fp:
+                            try:
+                                sim = DataStructs.TanimotoSimilarity(query_fp, db_fp)
+                                similarities.append((sim, names[i], mols[i], valid_smiles[idx]))
+                            except:
+                                continue
+                    similarities.sort(key=lambda x: x[0], reverse=True)
+                    top_hits = similarities[:top_n]
+                    results_list.append({'Input SMILES': valid_smiles[idx], 'Top matches': top_hits})
 
-                cols = st.columns(len(res['Top matches']))
-                for col, hit in zip(cols, res['Top matches']):
-                    with col:
-                        if hit[2]:
-                            st.image(Draw.MolToImage(hit[2], size=(200, 200)),
-                                     caption=f"{hit[1]}\nSim: {hit[0]:.3f}")
+                # Display results: table + images
+                for res in results_list:
+                    st.markdown(f"### Input Molecule: {res['Input SMILES']}")
+                    df_matches = pd.DataFrame([{
+                        'Name': hit[1],
+                        'SMILES': hit[3],
+                        'Similarity': f"{hit[0]:.3f}"
+                    } for hit in res['Top matches']])
+                    st.dataframe(df_matches)
 
-    except Exception as e:
-        st.error(f"Error processing file: {str(e)}")
+                    cols = st.columns(len(res['Top matches']))
+                    for col, hit in zip(cols, res['Top matches']):
+                        with col:
+                            if hit[2]:
+                                st.image(Draw.MolToImage(hit[2], size=(200, 200)),
+                                         caption=f"{hit[1]}\nSim: {hit[0]:.3f}")
+
+        except Exception as e:
+            st.error(f"Error processing file: {str(e)}")
         
     # --- Compare two molecules only in Advanced Similarity Search page ---
     st.markdown("### 🔍 Compare Two Molecules")
