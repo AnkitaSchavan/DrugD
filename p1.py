@@ -2144,6 +2144,18 @@ elif app_mode == "ℹ️ About":
     ''', unsafe_allow_html=True)
     st.markdown('</div></div>', unsafe_allow_html=True)
 
+    # Acknowledgement Section
+    st.markdown('<div class="about-section">', unsafe_allow_html=True)
+    st.markdown('<h2 class="section-title">🙏 Acknowledgement</h2>', unsafe_allow_html=True)
+    st.markdown("""
+        <p>I am deeply grateful to DES (Deccan Education Society) Pune University for providing the academic foundation and resources that made this project possible.</p>
+        <p>My sincere thanks to Dr. Kushagra Kashyap for his expert guidance, mentorship, and invaluable insights in cheminformatics and computational drug discovery, which were instrumental in shaping this work.</p>
+        <p>I also extend my appreciation to the Streamlit team for developing such an intuitive and powerful framework, which enabled the seamless creation of this interactive web application.</p>
+        <p>Special thanks to the RDKit community for their open-source cheminformatics toolkit that forms the backbone of this application's molecular analysis capabilities.</p>
+        <p>This work was supported by the Bioinformatics department at DES Pune University, whose infrastructure and academic environment fostered this research.</p>
+    """, unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
     # Contact Information
     st.markdown('<div class="about-section">', unsafe_allow_html=True)
     st.markdown('<h2 class="section-title">📬 Contact & Feedback</h2>', unsafe_allow_html=True)
