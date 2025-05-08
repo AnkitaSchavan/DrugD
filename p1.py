@@ -1705,7 +1705,7 @@ elif app_mode == "🖥️ Virtual Screening":
 
         # Display structural alert information
         st.markdown("---")
-       st.write("### 🚨 Structural Alert Screening")
+        st.write("### 🚨 Structural Alert Screening")
 
 try:
     # First verify all required variables exist
