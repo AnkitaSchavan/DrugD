@@ -1705,76 +1705,70 @@ elif app_mode == "🖥️ Virtual Screening":
 
         # Display structural alert information
         st.markdown("---")
-        st.write("### 🚨 Structural Alert Screening")
+       st.write("### 🚨 Structural Alert Screening")
 
-# First check if we have all required data
-finally:
-    # Verify all required variables exist
-    required_vars = {
-        'screen_smiles_valid': screen_smiles_valid,
-        'pains_flags': pains_flags,
-        'brenk_flags': brenk_flags,
-        'nih_flags': nih_flags,
-        'all_filter_matches': all_filter_matches
+try:
+    # First verify all required variables exist
+    if not all(var in globals() for var in ['screen_smiles_valid', 'pains_flags', 'brenk_flags', 'nih_flags', 'all_filter_matches']):
+        raise NameError("Missing required screening data variables")
+
+    # Check all arrays have same length
+    lengths = {
+        'SMILES': len(screen_smiles_valid),
+        'PAINS': len(pains_flags),
+        'Brenk': len(brenk_flags),
+        'NIH': len(nih_flags),
+        'Matches': len(all_filter_matches)
     }
     
-    # Check array lengths
-    array_lengths = {k: len(v) for k, v in required_vars.items()}
-    if len(set(array_lengths.values())) != 1:
-        raise ValueError(f"Array length mismatch: {array_lengths}")
-    
+    if len(set(lengths.values())) > 1:
+        raise ValueError(f"Inconsistent array lengths: {lengths}")
+
     # Create DataFrame
-    alert_data = {
+    alert_df = pd.DataFrame({
         'SMILES': screen_smiles_valid,
         'PAINS Alert': pains_flags,
         'Brenk Alert': brenk_flags,
         'NIH Alert': nih_flags,
         'All Filter Matches': all_filter_matches
-    }
-    
+    })
+
     # Add names if available
-    if 'name' in screen_df.columns:
-        name_values = screen_df.iloc[original_indices]['name'].values
-        if len(name_values) == len(screen_smiles_valid):
-            alert_data['Name'] = name_values
-    
-    alert_df = pd.DataFrame(alert_data)
-    
+    if 'name' in screen_df.columns and len(screen_df) == len(alert_df):
+        alert_df['Name'] = screen_df['name'].values
+
     # Display results
     st.dataframe(
         alert_df,
         use_container_width=True,
         column_config={
             "PAINS Alert": st.column_config.CheckboxColumn("PAINS Alert"),
-            "Brenk Alert": st.column_config.CheckboxColumn("Brenk Alert"),
+            "Brenk Alert": st.column_config.CheckboxColumn("Brenk Alert"), 
             "NIH Alert": st.column_config.CheckboxColumn("NIH Alert"),
             "All Filter Matches": "Matched Filters"
         }
     )
-    
-    # Show summary stats
-    cols = st.columns(3)
-    with cols[0]:
-        st.metric("PAINS Alerts", f"{sum(pains_flags)}/{len(pains_flags)}")
-    with cols[1]:
-        st.metric("Brenk Alerts", f"{sum(brenk_flags)}/{len(brenk_flags)}")
-    with cols[2]:
-        st.metric("NIH Alerts", f"{sum(nih_flags)}/{len(nih_flags)}")
-    
+
+    # Show summary metrics
+    col1, col2, col3 = st.columns(3)
+    col1.metric("PAINS Alerts", f"{sum(pains_flags)}/{len(pains_flags)}")
+    col2.metric("Brenk Alerts", f"{sum(brenk_flags)}/{len(brenk_flags)}") 
+    col3.metric("NIH Alerts", f"{sum(nih_flags)}/{len(nih_flags)}")
+
     # Download button
     st.download_button(
         "💾 Download Results",
         alert_df.to_csv(index=False).encode('utf-8'),
-        "alert_results.csv",
+        "structural_alerts.csv",
         "text/csv"
     )
 
 except NameError as e:
-    st.error(f"Missing required data: {str(e)}")
+    st.error(f"Configuration error: {str(e)}")
 except ValueError as e:
-    st.error(f"Data error: {str(e)}")
+    st.error(f"Data consistency error: {str(e)}")
 except Exception as e:
-    st.error(f"Error in alert screening: {str(e)}")
+    st.error(f"Unexpected error in alert screening: {str(e)}")
         
         st.markdown("---") # Use custom HR
         # Screening parameters
