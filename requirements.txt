@@ -39,3 +39,7 @@ watchdog==6.0.0
 
 # 🧪 RDKit - essential for cheminformatics work
 rdkit==2023.9.5
+
+libxrender1 
+libxext6 
+libsm6
