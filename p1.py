@@ -295,7 +295,7 @@ if 'smiles_input' not in st.session_state:
 with st.sidebar:
     st.markdown("""
     <div class="sidebar-header">
-        <h2>🧪 Drug Discovery Suite</h2>
+        <h2>🧪 Drug Candidate Exploration Hub</h2>
         <p>Navigate through modules</p>
     </div>
     """, unsafe_allow_html=True)
@@ -2028,6 +2028,13 @@ elif app_mode == "⚗️ Compound Optimization":
 elif app_mode == "ℹ️ About":
     st.markdown("""
         <style>
+            .about-header {
+                color: #004080;
+                font-size: 2rem;
+                font-weight: bold;
+                margin-bottom: 20px;
+                text-align: center;
+            }
             .about-section {
                 background-color: #f8f9fa;
                 border-radius: 15px;
@@ -2066,6 +2073,19 @@ elif app_mode == "ℹ️ About":
             .profile-text {
                 flex: 1;
             }
+            .github-btn {
+                background-color: #333;
+                color: white;
+                padding: 8px 15px;
+                border-radius: 5px;
+                text-decoration: none;
+                display: inline-block;
+                margin-top: 10px;
+                font-weight: bold;
+            }
+            .github-btn:hover {
+                background-color: #555;
+            }
             @media (max-width: 768px) {
                 .profile-container {
                     flex-direction: column;
@@ -2077,6 +2097,9 @@ elif app_mode == "ℹ️ About":
             }
         </style>
     """, unsafe_allow_html=True)
+
+    # Main header
+    st.markdown('<h1 class="about-header">ℹ️ About</h1>', unsafe_allow_html=True)
 
     # Author Section
     st.markdown('<div class="about-section">', unsafe_allow_html=True)
@@ -2116,7 +2139,7 @@ elif app_mode == "ℹ️ About":
     # Mentor Section
     st.markdown('<div class="about-section">', unsafe_allow_html=True)
     st.markdown('<div class="profile-container">', unsafe_allow_html=True)
-    st.markdown('<img src="https://media.licdn.com/dms/image/D4D03AQEvArDiFxfk0g/profile-displayphoto-shrink_400_400/0/1708930945912?e=2147483647&v=beta&t=78G09TJJ4Rn1DYc5KX-QPFDG9yhrwbOAtJdxd9LbbDw" class="profile-img" alt="Dr. Kushagra Kashyap">', unsafe_allow_html=True)
+    st.markdown('<img src="https://media.licdn.com/dms/image/v2/D5603AQF9gsU7YBjWVg/profile-displayphoto-shrink_400_400/B56ZZI.WrdH0Ag-/0/1744981029051?e=1752105600&v=beta&t=F4QBDSEgjUvnBS00xPkKqPTLI0jQaMpYefaOzARY1Yg" class="profile-img" alt="Dr. Kushagra Kashyap">', unsafe_allow_html=True)
     st.markdown('''
         <div class="profile-text">
             <h2 class="section-title">👨‍🏫 About the Mentor</h2>
@@ -2136,9 +2159,13 @@ elif app_mode == "ℹ️ About":
         <div class="contact-info">
             <p><strong>📧 Email:</strong> 3522411012@despu.edu.in</p>
             <p><strong>🔗 LinkedIn:</strong> <a href="https://www.linkedin.com/in/ankita-chavan-408709226" target="_blank">Ankita Chavan's Profile</a></p>
-            <p><strong>💻 GitHub:</strong> <a href="https://github.com/yourusername/yourrepository" target="_blank">View Source Code</a></p>
+            <p><strong>💻 Source Code:</strong> 
+                <a href="https://github.com/AnkitaSchavan/DrugD/edit/main/p1.py" target="_blank" class="github-btn">
+                    View on GitHub
+                </a>
+            </p>
         </div>
-        <p style="margin-top: 15px;">Your feedback helps improve this tool for the research community!</p>
+        <p style="margin-top: 15px; font-style: italic;">Your feedback helps improve this tool for the research community!</p>
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
