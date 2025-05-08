@@ -14,3 +14,4 @@ requests==2.31.0
 imageio==2.34.0
 ipython==8.24.0
 streamlit-aggrid==0.3.4
+setuptools>=68.0.0
