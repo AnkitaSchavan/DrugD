@@ -1,8 +1,8 @@
-streamlit>=1.32.2
+streamlit==1.32.2  # Pin to exact version
 pandas==2.2.2
-numpy==1.25.2
-rdkit==2023.09.4
-mordred==1.2.0
+numpy==1.26.4  # Bump to match pandas compatibility
+rdkit-pypi==2023.9.4  # Use the PyPI wheel
+mordred==1.2.0 --no-binary mordred  # Force source install
 pubchempy==1.0.4
 py3Dmol==2.0.1
 matplotlib==3.8.4
