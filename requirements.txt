@@ -2,7 +2,7 @@
 pip>=23.3.1
 
 # Core libraries
-streamlit==1.32.2
+streamlit>==1.32.2
 pandas==2.2.2
 numpy==1.25.2
 
@@ -38,6 +38,7 @@ ipython==8.24.0
 libXrender1
 
 streamlit-aggrid==0.3.4
+
 
 
 # If you use any other specific libraries, add them here with compatible versions
