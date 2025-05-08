@@ -1,5 +1,3 @@
-pip uninstall rdkit
-pip install rdkit-pypi  # This is the pure-Python version (no GUI dependencies)
 import streamlit as st
 import pandas as pd
 import numpy as np
