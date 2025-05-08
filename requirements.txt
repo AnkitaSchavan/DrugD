@@ -35,6 +35,6 @@ imageio==2.34.0
 # Optional: If you use Jupyter or IPython features
 ipython==8.24.0
 
-libxrender1
+libXrender1
 
 # If you use any other specific libraries, add them here with compatible versions
