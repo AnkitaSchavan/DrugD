@@ -1707,15 +1707,19 @@ elif app_mode == "🖥️ Virtual Screening":
         st.markdown("---")
         st.write("### 🚨 Structural Alert Screening")
 
-# First verify we have all required data
-if not all(var in globals() for var in ['screen_smiles_valid', 'pains_flags', 'brenk_flags', 'nih_flags', 'all_filter_matches']):
-    st.error("Missing required screening data variables")
-else:
+# First check if we have all required data
+def run_structural_alert_screening():
     try:
+        # Verify all required variables exist
+        required_vars = ['screen_smiles_valid', 'pains_flags', 'brenk_flags', 'nih_flags', 'all_filter_matches']
+        missing_vars = [var for var in required_vars if var not in globals()]
+        if missing_vars:
+            raise NameError(f"Missing required variables: {', '.join(missing_vars)}")
+
         # Validate array lengths
         base_length = len(screen_smiles_valid)
-        if not (len(pains_flags) == len(brenk_flags) == len(nih_flags) == len(all_filter_matches) == base_length):
-            raise ValueError("All input arrays must have the same length")
+        if not all(len(globals()[var]) == base_length for var in required_vars[1:]):
+            raise ValueError(f"All arrays must have same length as screen_smiles_valid ({base_length})")
 
         # Create DataFrame
         alert_data = {
@@ -1738,7 +1742,7 @@ else:
             use_container_width=True,
             column_config={
                 "PAINS Alert": st.column_config.CheckboxColumn("PAINS Alert"),
-                "Brenk Alert": st.column_config.CheckboxColumn("Brenk Alert"),
+                "Brenk Alert": st.column_config.CheckboxColumn("Brenk Alert"), 
                 "NIH Alert": st.column_config.CheckboxColumn("NIH Alert"),
                 "All Filter Matches": "Matched Filters"
             }
@@ -1758,10 +1762,15 @@ else:
             "text/csv"
         )
 
+    except NameError as e:
+        st.error(f"Configuration error: {str(e)}")
     except ValueError as e:
-        st.error(f"Data validation error: {str(e)}")
+        st.error(f"Data error: {str(e)}")
     except Exception as e:
-        st.error(f"An error occurred during screening: {str(e)}")
+        st.error(f"Unexpected error: {str(e)}")
+
+# Execute the screening function
+run_structural_alert_screening()
         
         st.markdown("---") # Use custom HR
         # Screening parameters
