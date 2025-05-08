@@ -20,7 +20,7 @@ seaborn==0.13.2
 plotly==5.21.0
 
 # Data and UI
-st-aggrid==0.3.4
+
 Pillow==10.3.0
 
 # Scikit-learn for PCA, t-SNE, etc.
