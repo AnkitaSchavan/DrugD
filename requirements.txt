@@ -38,8 +38,10 @@ urllib3==2.4.0
 watchdog==6.0.0
 
 # 🧪 RDKit - essential for cheminformatics work
-rdkit-pypi==2022.9.5  # Safer for headless environments
-
+rdkit-pypi==2022.9.5         # No X11 dependency
+Pillow==9.5.0                # Newer versions can trigger X11 errors
+py3Dmol==2.0.2.post1         # If you're using molecular visualization
+matplotlib==3.5.3            # Safe version
 
 libxrender1 
 libxext6 
