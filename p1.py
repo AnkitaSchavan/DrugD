@@ -1,13 +1,8 @@
-import matplotlib
-matplotlib.use('Agg')  # Disable GUI backend (no libXrender needed)
 import streamlit as st
 import pandas as pd
 import numpy as np
 from rdkit import Chem
-from rdkit.Chem import Descriptors, AllChem, DataStructs, Lipinski, Crippen
-from rdkit.Chem import Draw
-from rdkit import Chem
-from rdkit.Chem.Draw import IPythonConsole
+from rdkit.Chem import Descriptors, Draw, AllChem, DataStructs, Lipinski, Crippen
 from rdkit.Chem import PandasTools, rdFingerprintGenerator
 from rdkit.ML.Descriptors import MoleculeDescriptors
 import pubchempy as pcp
@@ -427,10 +422,10 @@ def display_molecule_input():
                                          value=st.session_state.get(f'smiles_input_{app_mode}', ''), # Retain value
                                          key=f"smiles_input_{app_mode}") # Unique key per page
             if smiles_input:
-                mol = Chem.MolFromSmiles("CCO")
+                mol = Chem.MolFromSmiles(smiles_input)
                 if mol:
                     st.success("✅ Valid SMILES")
-                    img = Draw.MolToImage(mol, "mol.png")
+                    img = Draw.MolToImage(mol, size=(200, 200))
                     st.image(img, caption="Input Molecule", use_container_width=True)
                     st.session_state.selected_mol = mol
                     st.session_state.selected_smiles = smiles_input
