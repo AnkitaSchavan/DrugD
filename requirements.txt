@@ -1,9 +1,8 @@
-pip>=25.1.1  # Force pip upgrade
-streamlit==1.32.2
+streamlit>=1.32.2
 pandas==2.2.2
-numpy==1.26.4  # Updated for compatibility
-rdkit-pypi==2023.9.4  # Use PyPI wheel instead of conda-forge
-mordred==1.2.0 --no-binary mordred  # Build from source
+numpy>=1.25.2,<1.27  # Ensures compatibility with pandas and scikit-learn
+rdkit>=2023.9.4       # Use official PyPI wheel; do not use 'rdkit-pypi' unless needed[6][10]
+mordred               # Mordred can be installed via pip, will use latest compatible[11]
 pubchempy==1.0.4
 py3Dmol==2.0.1
 matplotlib==3.8.4
