@@ -1295,8 +1295,8 @@ elif app_mode == "📊 Advanced Similarity Search":
             st.markdown(f"### **Similarity score: {sim_score:.3f}**")
         else:
             st.error("Invalid SMILES entered.")
-
-elif app_mode == "💊 ADMET Prediction":
+        
+    elif app_mode == "💊 ADMET Prediction":
     st.markdown("""
     <div class="header">
         <h1 style="color:black; margin:0;">💊 ADMET Prediction</h1>
@@ -1619,7 +1619,7 @@ elif app_mode == "🖥️ Virtual Screening":
         st.dataframe(screen_df.head(), use_container_width=True) # Show a preview
 
         # Convert SMILES to molecules with robust error handling
-        @st.cache_data(show_spinner=False) # Don't show spinner here, use custom status
+        @st.cache_data(show_spinner=False)
         def process_screening_molecules(_df, smiles_col):
             processed_mols = []
             processed_smiles = []
@@ -1651,7 +1651,7 @@ elif app_mode == "🖥️ Virtual Screening":
                 try:
                     mol = Chem.MolFromSmiles(str(smi)) if pd.notna(smi) else None
                     if mol:
-                        Chem.SanitizeMol(mol) # Attempt sanitization
+                        Chem.SanitizeMol(mol)
                         processed_mols.append(mol)
                         processed_smiles.append(str(smi))
                         original_indices.append(i)
@@ -1703,23 +1703,27 @@ elif app_mode == "🖥️ Virtual Screening":
 
             status_mol_process.update(label=f"✅ Successfully processed {len(screen_mols)} molecules. {len(invalid_indices)} invalid/skipped.", state="complete")
 
-# Display structural alert information
+        # Create alert DataFrame ensuring arrays are aligned
+        alert_rows = []
+
+        for i in range(len(screen_smiles_valid)):
+            row = {
+                'SMILES': screen_smiles_valid[i],
+                'PAINS Alert': pains_flags[i],
+                'Brenk Alert': brenk_flags[i],
+                'NIH Alert': nih_flags[i],
+                'All Filter Matches': all_filter_matches[i]
+            }
+            if 'name' in screen_df.columns:
+                original_idx = original_indices[i]
+                row['Name'] = screen_df.iloc[original_idx]['name']
+            alert_rows.append(row)
+
+        alert_df = pd.DataFrame(alert_rows)
+
+        # Display alerts table
         st.markdown("---")
         st.write("### 🚨 Structural Alert Screening")
-       
-        # Create a DataFrame for the alerts
-        alert_df = pd.DataFrame({
-            'SMILES': screen_smiles_valid,
-            'PAINS Alert': pains_flags,
-            'Brenk Alert': brenk_flags,
-            'NIH Alert': nih_flags,
-            'All Filter Matches': all_filter_matches
-        })
-       
-        # Add names if available
-        if 'name' in screen_df.columns:
-            alert_df['Name'] = screen_df.iloc[original_indices]['name'].values
-       
         st.dataframe(
             alert_df,
             use_container_width=True,
@@ -1727,11 +1731,13 @@ elif app_mode == "🖥️ Virtual Screening":
                 "PAINS Alert": st.column_config.CheckboxColumn("PAINS Alert", help="Indicates if molecule matches PAINS filters"),
                 "Brenk Alert": st.column_config.CheckboxColumn("Brenk Alert", help="Indicates if molecule matches Brenk filters"),
                 "NIH Alert": st.column_config.CheckboxColumn("NIH Alert", help="Indicates if molecule matches NIH filters"),
-                "All Filter Matches": "Matched Filters"
+                "All Filter Matches": "Matched Filters",
+                "SMILES": "SMILES",
+                "Name": "Name"
             }
         )
-       
-        # Summary statistics
+
+        # Summary metrics
         col1, col2, col3 = st.columns(3)
         with col1:
             st.metric("PAINS Alerts", f"{sum(pains_flags)} / {len(pains_flags)}")
@@ -1739,7 +1745,7 @@ elif app_mode == "🖥️ Virtual Screening":
             st.metric("Brenk Alerts", f"{sum(brenk_flags)} / {len(brenk_flags)}")
         with col3:
             st.metric("NIH Alerts", f"{sum(nih_flags)} / {len(nih_flags)}")
-           
+        
         # Download alert results
         csv_alerts = alert_df.to_csv(index=False).encode('utf-8')
         st.download_button(
@@ -1747,11 +1753,11 @@ elif app_mode == "🖥️ Virtual Screening":
             csv_alerts,
             "structural_alerts_results.csv",
             "text/csv",
-            key="download_alert_results"
+            key="download_alerts"
         )
 
         st.markdown("---") # Use custom HR
-        # Screening parameters
+        # Screening parameters UI
         st.write("### ⚙️ Screening Parameters")
         with st.container(border=True):
             col1, col2, col3 = st.columns(3)
@@ -1764,8 +1770,9 @@ elif app_mode == "🖥️ Virtual Screening":
 
         st.markdown("---") # Use custom HR
 
+        # Start screening button
         if st.button("🚀 Start Virtual Screening", key="start_screening", type="primary", use_container_width=True):
-            # Fingerprint calculation with error handling (re-defined for scope)
+            # Define fingerprint function
             def get_fingerprint_screen(m, fp_type):
                 try:
                     if m is None: return None
@@ -1775,11 +1782,10 @@ elif app_mode == "🖥️ Virtual Screening":
                         return AllChem.GetMACCSKeysFingerprint(m)
                     elif fp_type == "RDKit":
                         return Chem.RDKFingerprint(m)
-                    return None
                 except:
-                    return None # Return None on failure
+                    return None
 
-            # Precompute database fingerprints with progress
+            # Prepare database fingerprints
             with st.status(f"Preparing database fingerprints ({fp_type_screen})...", expanded=False) as status_db_fp:
                 db_fps = []
                 valid_db_indices = []
@@ -1788,11 +1794,11 @@ elif app_mode == "🖥️ Virtual Screening":
                     fp = get_fingerprint_screen(db_mol, fp_type_screen)
                     if fp is not None:
                         db_fps.append(fp)
-                        valid_db_indices.append(i) # Store index of valid database entry
+                        valid_db_indices.append(i)
 
                 if not db_fps:
                     status_db_fp.update(label="❌ Could not generate fingerprints for database compounds.", state="error")
-                    st.error("Failed to generate fingerprints for the database compounds. Screening cannot proceed.")
+                    st.error("Failed to generate fingerprints for the database compounds.")
                     st.stop()
 
                 status_db_fp.update(label=f"✅ Prepared fingerprints for {len(db_fps)} database compounds.", state="complete")
@@ -1802,46 +1808,37 @@ elif app_mode == "🖥️ Virtual Screening":
             total_queries = len(screen_mols)
             st.write(f"Screening {total_queries} query molecules against {len(db_fps)} database compounds...")
             progress_bar_screening = st.progress(0, text="Screening progress: 0%")
-
-            db_data_valid = data.iloc[valid_db_indices].reset_index(drop=True) # Use only database entries with valid fingerprints
+            db_data_valid = data.iloc[valid_db_indices].reset_index(drop=True)
 
             for i, query_mol in enumerate(screen_mols):
                 query_fp = get_fingerprint_screen(query_mol, fp_type_screen)
                 if query_fp is None:
-                    continue # Skip if query fingerprint fails
+                    continue
 
-                # Calculate similarities against the valid database fingerprints
                 similarities = []
                 for db_fp in db_fps:
                     try:
                         similarity = DataStructs.TanimotoSimilarity(query_fp, db_fp)
                         similarities.append(similarity)
-                    except Exception as e:
+                    except:
                         similarities.append(0.0)
 
-                # Add similarities to the valid database data
+                # Assign similarities to data
                 db_data_valid['similarity'] = similarities
-
-                # Find matches above threshold
                 matches = db_data_valid[db_data_valid['similarity'] >= threshold_screen]\
                     .sort_values('similarity', ascending=False)\
                     .head(max_matches_screen)
 
-                # Add matches to results list
-                original_query_smiles = screen_smiles_valid[i] # Get original SMILES from the valid list
-                original_row_index = original_indices[i] # Get original row index
-                query_name = screen_df.iloc[original_row_index].get('name', 'N/A') # Try to get 'name' if it exists
-                query_pains = pains_flags[i]
-                query_brenk = brenk_flags[i]
-                query_nih = nih_flags[i]
+                original_idx = original_indices[i]
+                query_name = screen_df.iloc[original_idx].get('name', 'N/A')
 
                 for match in matches.itertuples():
                     results.append({
-                        'Query SMILES': original_query_smiles,
+                        'Query SMILES': screen_smiles_valid[i],
                         'Query Name': query_name,
-                        'Query PAINS Alert': query_pains,
-                        'Query Brenk Alert': query_brenk,
-                        'Query NIH Alert': query_nih,
+                        'Query PAINS Alert': pains_flags[i],
+                        'Query Brenk Alert': brenk_flags[i],
+                        'Query NIH Alert': nih_flags[i],
                         'Match Name': match.generic_name,
                         'Match SMILES': match.smiles,
                         'Similarity': match.similarity,
@@ -1849,17 +1846,15 @@ elif app_mode == "🖥️ Virtual Screening":
                         'Match LogP': match.logp
                     })
 
-                # Update progress bar
                 progress_bar_screening.progress((i + 1) / total_queries, text=f"Screening progress: {int((i+1)/total_queries*100)}%")
-
-            progress_bar_screening.empty() # Hide progress bar when done
+            progress_bar_screening.empty()
 
             if results:
                 results_df = pd.DataFrame(results)
                 st.balloons()
                 st.success(f"🎉 Screening complete! Found {len(results_df)} matches above similarity threshold {threshold_screen:.2f}.")
 
-                # Display results table
+                # Show results table
                 st.write("### Screening Results")
                 st.dataframe(
                     results_df.sort_values(['Query SMILES', 'Similarity'], ascending=[True, False]),
@@ -1892,16 +1887,13 @@ elif app_mode == "🖥️ Virtual Screening":
                     csv,
                     "virtual_screening_results.csv",
                     "text/csv",
-                    key="download_screening_results"
+                    key="download_screening"
                 )
             else:
-                st.warning(f"No matches found above the similarity threshold {threshold_screen:.2f} for any query molecule.")
-
+                st.warning(f"No matches found above the similarity threshold {threshold_screen:.2f}.")
     except Exception as e:
         st.error(f"An unexpected error occurred during virtual screening: {e}")
         st.write(traceback.format_exc())
-
-
 
 elif app_mode == "⚗️ Compound Optimization":
     st.markdown("""
