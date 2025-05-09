@@ -1295,8 +1295,7 @@ elif app_mode == "📊 Advanced Similarity Search":
             st.markdown(f"### **Similarity score: {sim_score:.3f}**")
         else:
             st.error("Invalid SMILES entered.")
-        
-    elif app_mode == "💊 ADMET Prediction":
+elif app_mode == "💊 ADMET Prediction":
     st.markdown("""
     <div class="header">
         <h1 style="color:black; margin:0;">💊 ADMET Prediction</h1>
